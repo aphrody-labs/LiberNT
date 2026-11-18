@@ -14132,36 +14132,17 @@ VOID
 XHCI_ReadDebugShare(
     _Inout_ PXHCI_EXTENSION Extension)
 {
-    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(KD_USB_SHARE_KEY_PATH);
-    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(KD_USB_SHARE_VALUE);
-    ULONG Buffer[(FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + sizeof(KD_USB_SHARE) + sizeof(ULONG) - 1) /
-                 sizeof(ULONG)];
-    PKEY_VALUE_PARTIAL_INFORMATION Value = (PKEY_VALUE_PARTIAL_INFORMATION)Buffer;
     PKD_USB_SHARE Share = &Extension->DebugShareInfo;
-    OBJECT_ATTRIBUTES ObjectAttributes;
     ULONGLONG Dcbaap;
-    ULONG Length, Index;
-    HANDLE Key;
-    NTSTATUS Status;
+    ULONG Index;
 
     Extension->DebugShare = FALSE;
 
-    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-    if (!NT_SUCCESS(ZwOpenKey(&Key, KEY_QUERY_VALUE, &ObjectAttributes)))
+    if (!NT_SUCCESS(KdUsbShareRead(Share)))
         return;
 
-    Status = ZwQueryValueKey(Key, &ValueName, KeyValuePartialInformation, Value, sizeof(Buffer), &Length);
-    ZwClose(Key);
-    if (!NT_SUCCESS(Status) || Value->Type != REG_BINARY || Value->DataLength != sizeof(KD_USB_SHARE))
+    if (Share->Port == 0 || Share->Port > Extension->NumberOfPorts || Share->Interrupter == 0)
         return;
-
-    RtlCopyMemory(Share, Value->Data, sizeof(*Share));
-    if (Share->Signature != KD_USB_SHARE_SIGNATURE || Share->Size != sizeof(*Share) ||
-        Share->Port == 0 || Share->Port > Extension->NumberOfPorts ||
-        Share->Interrupter == 0 || Share->SlotCount > KD_USB_SHARE_MAX_SLOTS)
-    {
-        return;
-    }
 
     for (Index = 0; Index < Share->SlotCount; Index++)
     {
