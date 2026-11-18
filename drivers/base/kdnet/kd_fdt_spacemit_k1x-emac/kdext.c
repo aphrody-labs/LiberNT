@@ -34,7 +34,8 @@ KdInitializeLibrary(
     if (!Exports || Exports->FunctionCount != KDNET_EXT_EXPORTS)
         return STATUS_INVALID_PARAMETER;
 
-    if (!Device->OemData || Device->OemDataLength != sizeof(KD_FDT_DEVICE))
+    if (Device->BaseClass != PCI_CLASS_NETWORK_CTLR || !Device->OemData ||
+        Device->OemDataLength != sizeof(KD_FDT_DEVICE))
         return STATUS_NOT_SUPPORTED;
 
     KdNetExtensibilityImports = ImportTable;

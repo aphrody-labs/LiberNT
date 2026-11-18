@@ -275,3 +275,11 @@ KdPlatformEnumerate(
     return KdpEnumerateDebugPortTable(LoaderBlock, Callback) ||
            KdpEnumerateDeviceTree(LoaderBlock, Callback);
 }
+
+BOOLEAN
+KdPlatformEnumerateDeviceTree(
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ PKDNET_PLATFORM_CALLBACK Callback)
+{
+    return KdpEnumerateDeviceTree(LoaderBlock, Callback);
+}
